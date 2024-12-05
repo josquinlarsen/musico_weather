@@ -1,10 +1,16 @@
 from fastapi import APIRouter, HTTPException
-import requests
-from weather_schema import WeatherAlert, WeatherResponse
-from main import API_KEY, BASE_URL
+import requests, os
+from dotenv import load_dotenv
+from domain.weather.weather_schema import WeatherAlert, WeatherResponse
 
 router = APIRouter()
 
+load_dotenv()
+
+API_KEY = os.getenv("WEATHER_API_KEY")
+if not API_KEY:
+    raise Exception("API key not found. Please set it in the .env file.")
+BASE_URL = "http://api.weatherapi.com/v1/current.json"
 
 @router.get("/weather/{zipcode}", response_model=WeatherResponse)
 async def get_weather(zipcode: str):
@@ -18,7 +24,7 @@ async def get_weather(zipcode: str):
 
         messages = weather_checks(curr_temp, curr_precipitation)
 
-        return WeatherResponse(temperature=curr_temp, messages=messages)
+        return WeatherResponse(temperature=curr_temp, messages=[messages])
 
     else:
         raise HTTPException(status_code=500, detail="Error retrieving data. Try again.")
@@ -34,22 +40,16 @@ def weather_checks(temperature, precipitation):
     Checks conditions for temp range and precipitation
     """
 
-    messages = []
+    temp_message = ( 
+        "Warning: Temperature is NOT within 60-75°F!"
+        if temperature < 60 or temperature > 75
+        else "Temperature is within 60-75°F range."
+    )
 
-    if 60 < temperature > 75:
-        messages.append(
-            WeatherAlert(temp_message="Warning: Temperature is NOT within 60-75°F!")
-        )
-    else:
-        messages.append(
-            WeatherAlert(temp_message="Temperature is within 60-75°F range.")
-        )
+    precip_message = (
+        "Warning: Temperature is NOT within 60-75°F!"
+        if precipitation > 0
+        else "There is currently no precipitation."
+    )
 
-    if precipitation > 0:
-        messages.append(WeatherAlert(precip_message="Warning: There is precipitation!"))
-    else:
-        messages.append(
-            WeatherAlert(precip_message="There is currently no precipitation.")
-        )
-
-    return messages
+    return WeatherAlert(temp_message=temp_message, precip_message=precip_message)

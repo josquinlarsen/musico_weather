@@ -2,7 +2,8 @@ from pydantic import BaseModel
 
 
 class WeatherAlert(BaseModel):
-    alert_message: str
+    temp_message: str
+    precip_message: str
 
 
 class WeatherResponse(BaseModel):
