@@ -5,6 +5,7 @@ from main import API_KEY, BASE_URL
 
 router = APIRouter()
 
+
 @router.get("/weather/{zipcode}", response_model=WeatherResponse)
 async def get_weather(zipcode: str):
     url = f"{BASE_URL}?key={API_KEY}&q={zipcode}&aqi=no"
@@ -21,6 +22,7 @@ async def get_weather(zipcode: str):
 
     else:
         raise HTTPException(status_code=500, detail="Error retrieving data. Try again.")
+
 
 # ------------------------------------------------------------------
 #       Utilities
